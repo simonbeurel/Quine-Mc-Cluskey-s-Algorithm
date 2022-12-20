@@ -1,11 +1,18 @@
+import java.lang.reflect.Array;
+import java.util.*;
 public class Minterm {
+
+    private ArrayList<Integer> combination = new ArrayList<>();
+    private boolean marked = false;
+    private String binaire ="";
     /**
      *
      * @param decimal   the decimal number for which we want to calculate the number of bits necessary to represent it
      * @return          the minimum number of bits needed to encode this decimal in binary.
      */
     public static int numberOfBitsNeeded(int decimal) {
-        return 0;
+        String binaire = Integer.toBinaryString(decimal);
+        return binaire.length();
     }
 
     /*********************************************************
@@ -18,8 +25,8 @@ public class Minterm {
      * For example, [0*00] may have been created from 0 and 2 (* = -1)
      * @return all the numbers that were used to build this minterm.
      */
-    public Collection getCombinations() {
-        return new HashSet<>();
+    public ArrayList<Integer> getCombinations() {
+        return this.combination;
     }
 
 
@@ -28,7 +35,7 @@ public class Minterm {
      * marks the minterm as used to build another minTerm
      */
     public void mark(){
-
+        this.marked = true;
     }
 
     /**
@@ -36,7 +43,11 @@ public class Minterm {
      * @return true if the minterm has been used to build another minterm, false otherwise.
      */
     public boolean isMarked(){
-        return false;
+        return this.marked;
+    }
+
+    public String getBinaire(){
+        return this.binaire;
     }
 
     /*********************************************************
@@ -47,7 +58,11 @@ public class Minterm {
      * @return return the number of 0 in the minterm
      */
     public int numberOfZero() {
-        return -1;
+        int ret = 0;
+        for(int i =0; i!= this.getBinaire().length(); i++){
+            if(this.getBinaire().charAt(i)=='0') ret++;
+        }
+        return ret;
     }
 
     /**
@@ -55,7 +70,11 @@ public class Minterm {
      * @return return the number of 1 in the minterm
      */
     public int numberOfOne() {
-        return -1;
+        int ret = 0;
+        for(int i =0; i!= this.getBinaire().length(); i++){
+            if(this.getBinaire().charAt(i)=='1') ret++;
+        }
+        return ret;
     }
 
 
@@ -70,15 +89,17 @@ public class Minterm {
      */
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Minterm minterm = (Minterm) o;
-        return this == o;
+        if(o instanceof Minterm){
+            Minterm mt = (Minterm) o;
+            if(mt.getBinaire().equals(this.getBinaire())) return true;
+            else return false;
+        }
+        return false;
     }
 
     @Override
     public int hashCode() {
-        return 0;
+        return this.hashCode();
     }
 
 
@@ -94,6 +115,11 @@ public class Minterm {
      * @param numberOfBits  the number of bits of encoding of the decimal
      */
     public Minterm(int decimal, int numberOfBits) {
+        this.combination.add(decimal);
+        this.binaire = Integer.toBinaryString(decimal);
+        while(binaire.length()!=numberOfBits){
+            this.binaire = "0"+this.binaire;
+        }
     }
 
 
@@ -104,6 +130,21 @@ public class Minterm {
      * @param binary
      */
     protected Minterm(int... binary) {
+        for(int i : binary){
+            if(i == -1){
+                this.binaire+="-";
+            }else{
+                this.binaire+= String.valueOf(i);
+            }
+
+        }
+        //this.combination.add(Integer.parseInt(binaire,2));
+    }
+
+    public Minterm(ArrayList<Integer> combination, String binaire){
+        this.combination = combination;
+        this.binaire = binaire;
+        this.marked = false;
     }
 
 
@@ -116,7 +157,7 @@ public class Minterm {
      */
     @Override
     public String toString() {
-        return "";
+        return this.getBinaire();
     }
 
 
@@ -131,9 +172,9 @@ public class Minterm {
      * This method is private because it should not be used outside this class.
      * @returns the value of the minterm calculated from its binary representation.
      */
-    public int toIntValue(){
-        int res = 0;
-        return res;
+    private int toIntValue(){
+        if (this.getBinaire().contains("-")) return -1;
+        else return Integer.parseInt(this.getBinaire(),2);
     }
 
 
@@ -156,7 +197,31 @@ public class Minterm {
      * @return a new Minterm when it is possible to merge, else null
      */
     public Minterm merge(Minterm other) {
-        return null;
+        if(other.getBinaire().length() != this.getBinaire().length()){
+            return null;
+        }else{
+            String binaire2 = other.getBinaire();
+            int diff = 0; String binaire3 = "";
+            for(int i=0; i!= binaire2.length(); i++){
+                if(this.getBinaire().charAt(i)!=binaire2.charAt(i)){
+                    diff++;
+                    binaire3+="-";
+                }else{
+                    binaire3+=binaire2.charAt(i);
+                }
+            }
+            if(diff >1){
+                return null;
+            }else{
+                this.mark();
+                other.mark();
+                ArrayList<Integer> combinaison = new ArrayList<>();
+                combinaison.addAll(this.getCombinations());
+                combinaison.addAll(other.getCombinations());
+                return new Minterm(combinaison, binaire3);
+            }
+        }
     }
+
 
 }
